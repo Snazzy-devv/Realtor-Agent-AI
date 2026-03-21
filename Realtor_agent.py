@@ -16,6 +16,16 @@ load_dotenv(override=True)
 # %% 
 os.environ["OPENARI_API_KEY"]= os.getenv("OPENAI_API_KEY")
 os.environ["base_url"]= "https://openrouter.ai/api/v1"
+import streamlit as st
+import os
+
+# This pulls the keys from the 'Advanced Settings' you just filled out
+# and puts them where CrewAI/OpenAI can actually find them.
+if "OPENAI_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
+if "SERPER_API_KEY" in st.secrets:
+    os.environ["SERPER_API_KEY"] = st.secrets["SERPER_API_KEY"]
 # %%
 from crewai import LLM, agent, task , crew
 # %%
