@@ -19,13 +19,19 @@ os.environ["base_url"]= "https://openrouter.ai/api/v1"
 import streamlit as st
 import os
 
-# This pulls the keys from the 'Advanced Settings' you just filled out
-# and puts them where CrewAI/OpenAI can actually find them.
+import streamlit as st
+import os
+
+# Put this at the very top
 if "OPENAI_API_KEY" in st.secrets:
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+    st.sidebar.success("✅ OpenAI Key detected in Secrets")
+else:
+    st.sidebar.error("❌ OpenAI Key NOT found in Secrets")
 
-if "SERPER_API_KEY" in st.secrets:
-    os.environ["SERPER_API_KEY"] = st.secrets["SERPER_API_KEY"]
+# Verify if the key actually looks correct (first 5 characters)
+if os.environ.get("OPENAI_API_KEY"):
+    st.sidebar.write(f"Key starts with: {os.environ['OPENAI_API_KEY'][:5]}...")
 # %%
 from crewai import LLM, agent, task , crew
 # %%
