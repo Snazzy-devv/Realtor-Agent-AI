@@ -1,7 +1,10 @@
-﻿streamlit
-crewai
-crewai[tools]
-pydantic
-python-dotenv
-langchain-community
+crewai==1.10.1
+crewai-tools==1.10.1
+streamlit==1.55.0
+langchain==1.2.10
+langchain-openai==1.1.10
+pydantic==2.11.10
+python-dotenv==1.1.1
+pandas==2.3.3
+openai==2.24.0
 duckduckgo-search
