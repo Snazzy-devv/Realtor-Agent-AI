@@ -36,7 +36,7 @@ if os.environ.get("OPENROUTER_API_KEY"):
 from crewai import LLM, agent, task , crew
 # %%
 cust_llm= LLM(
-    model="openrouter/gpt-4o-mini",
+    model="openai/gpt-4o-mini",
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY"),
     temperature=0.7,
