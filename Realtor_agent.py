@@ -1,4 +1,5 @@
-# RealEstateAgent.py
+# Realtor_agent_refined.py
+# Python 3.13, Streamlit + CrewAI + OpenRouter-ready
 
 # %% IMPORTS
 import os
@@ -7,6 +8,7 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
+# CrewAI imports
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import BaseTool
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
@@ -14,57 +16,47 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 # %% LOAD ENVIRONMENT VARIABLES
 load_dotenv(override=True)
 
-# Fetch OpenRouter API key from Streamlit secrets or .env
-OPENROUTER_API_KEY = st.secrets.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+# Check Streamlit secrets first
+if "OPENROUTER_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
+    st.sidebar.success("✅ OpenRouter API Key detected in Secrets")
+else:
+    os.environ["OPENAI_API_KEY"] = os.getenv("OPENROUTER_API_KEY")
+    if os.environ.get("OPENAI_API_KEY"):
+        st.sidebar.info("✅ OpenRouter API Key loaded from .env")
+    else:
+        st.sidebar.error("❌ OpenRouter API Key not found!")
 
-if not OPENROUTER_API_KEY:
-    st.error("❌ OpenRouter API key not found! Please set it in Streamlit Secrets or .env.")
-    st.stop()
-
-# Set CrewAI / LiteLLM environment variables
-os.environ["OPENAI_API_KEY"] = OPENROUTER_API_KEY
+# Force CrewAI to use OpenRouter
 os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
 
-# %% STREAMLIT PAGE SETUP
+# %% STREAMLIT PAGE CONFIG
 st.set_page_config(page_title="Real Estate AI Agent", page_icon="🏠", layout="wide")
 st.title("🏠 Real Estate Marketing & Lead Intelligence")
 
-# %% INITIALIZE LLM
+# %% LLM SETUP (OpenRouter)
 cust_llm = LLM(
-    model="openai/gpt-4o-mini",
+    model="gpt-4o-mini",                    # OpenRouter-compatible model
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-    temperature=0.7,
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    temperature=0.7
 )
 
 # %% TOOLS
 search_tool = SerperDevTool()
 scrape_tool = ScrapeWebsiteTool()
 
-# Custom tool to notify admin & store leads
+# Custom Lead Notification Tool
 class NotifyAdminAndStoreLead(BaseTool):
     name: str = "notify_admin_and_store_lead"
-    description: str = "Store qualified lead info and notify admin."
+    description: str = "Store qualified lead information and notify admin."
 
     def _run(self, client_name: str, client_email: str, client_phone: str, score: int):
         print("New Qualified Lead")
-        print("Name:", client_name)
-        print("Email:", client_email)
-        print("Phone:", client_phone)
-        print("Score:", score)
+        print(f"Name: {client_name}, Email: {client_email}, Phone: {client_phone}, Score: {score}")
         return "Lead stored and admin notified"
 
 notify_tool = NotifyAdminAndStoreLead()
-
-# Optional webhook version
-def notify_admin_and_store_lead_webhook(lead_data_json):
-    WEBHOOK_URL = "https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec"
-    try:
-        data = json.loads(lead_data_json)
-        response = requests.post(WEBHOOK_URL, json=data)
-        return f"Success: Lead logged. Response: {response.text}"
-    except Exception as e:
-        return f"Error sending lead: {str(e)}"
 
 # %% AGENTS
 marketing_agent = Agent(
@@ -113,15 +105,15 @@ task_qualification = Task(
 
 task_storage = Task(
     description="""Review the qualification report for {client_name}. 
-    If the score is 7 or higher, create a JSON string with these keys: 
+    If the score is 7 or higher, create a JSON string with keys: 
     'name', 'email', 'phone', 'location', 'budget', 'score', 'summary'.
-    Then, call notify_admin_and_store_lead with that JSON string.""",
+    Then call notify_admin_and_store_lead with that JSON string.""",
     expected_output="Confirmation that the lead was stored or a reason for rejection.",
     agent=ops_manager,
     context=[task_qualification]
 )
 
-# %% STREAMLIT UI - SIDEBAR
+# %% STREAMLIT SIDEBAR INPUT
 with st.sidebar:
     st.header("👤 Single Lead Entry")
     c_name = st.text_input("Client Name", placeholder="John Doe")
@@ -131,16 +123,16 @@ with st.sidebar:
     c_bud = st.text_input("Budget", placeholder="$500,000")
     c_time = st.selectbox("Timeline", ["Immediate", "1-3 Months", "Looking"])
     c_prop = st.text_area("Property Details", placeholder="e.g. 4-bedroom terrace")
-    
+
     run_single = st.button("🚀 Process Single Lead", type="primary")
 
     st.divider()
-    
+
     st.header("📂 Batch Processing")
     st.write("Run the pre-defined daily list of leads.")
     run_batch = st.button("🔄 Run Daily Batch")
 
-# %% HELPER FUNCTION
+# %% CREW EXECUTION FUNCTION
 def run_real_estate_crew(input_data):
     crew = Crew(
         agents=[marketing_agent, research_agent, ops_manager],
@@ -160,10 +152,13 @@ if run_single:
                 'client_name': c_name, 'client_email': c_email, 'client_phone': c_phone,
                 'property_details': c_prop, 'budget': c_bud, 'location': c_loc, 'timeline': c_time
             }
-            result = run_real_estate_crew(inputs)
-            st.success("Lead Processing Complete!")
-            st.markdown("### 📊 AI System Report")
-            st.info(result)
+            try:
+                result = run_real_estate_crew(inputs)
+                st.success("Lead Processing Complete!")
+                st.markdown("### 📊 AI System Report")
+                st.info(result)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 # %% BATCH PROCESSING LOGIC
 if run_batch:
@@ -171,10 +166,13 @@ if run_batch:
         {'client_name': 'Alice Smith', 'client_email': 'alice@example.com', 'client_phone': '+234111222', 'property_details': '3BR Apartment in Lekki', 'budget': '$150,000', 'location': 'Lekki, Lagos', 'timeline': '3 months'},
         {'client_name': 'Bob Jones', 'client_email': 'bob@example.com', 'client_phone': '+234333444', 'property_details': '5BR Mansion in Ikoyi', 'budget': '$2,000,000', 'location': 'Ikoyi, Lagos', 'timeline': 'Immediate'}
     ]
-    
+
     st.write(f"Processing {len(daily_leads)} leads...")
     for lead in daily_leads:
         with st.expander(f"Processing: {lead['client_name']}", expanded=True):
-            result = run_real_estate_crew(lead)
-            st.write(result)
+            try:
+                result = run_real_estate_crew(lead)
+                st.write(result)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
     st.success("All batch leads processed!")
