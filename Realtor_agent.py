@@ -14,8 +14,12 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # %% 
-os.environ["OPENROUTER_API_KEY"]= os.getenv("OPENROUTER_API_KEY")
-os.environ["base_url"]= "https://openrouter.ai/api/v1"
+import os
+# Force LiteLLM (the engine inside CrewAI) to map all OpenAI calls to OpenRouter
+os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
+#os.environ["OPENROUTER_API_KEY"]= os.getenv("OPENROUTER_API_KEY")
+#os.environ["base_url"]= "https://openrouter.ai/api/v1"
 import streamlit as st
 import os
 
