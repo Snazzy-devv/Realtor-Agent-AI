@@ -6,16 +6,6 @@ import json
 from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
-import streamlit as st
-import os
-from crewai import Agent, Task, Crew, LLM
-
-# --- PASTE THIS BLOCK HERE ---
-# This moves secrets from Streamlit's settings into your app's "brain"
-if "OPENROUTER_API_KEY" in st.secrets:
-    os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
-    # We also set a dummy OpenAI key to stop CrewAI from crashing
-    os.environ["OPENAI_API_KEY"] = "na" 
 
 # Define your OpenRouter LLM once
 or_llm = LLM(
