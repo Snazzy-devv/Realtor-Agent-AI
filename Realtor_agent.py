@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # %% 
-os.environ["OPENARI_API_KEY"]= os.getenv("OPENAI_API_KEY")
+os.environ["OPENROUTER_API_KEY"]= os.getenv("OPENROUTER_API_KEY")
 os.environ["base_url"]= "https://openrouter.ai/api/v1"
 import streamlit as st
 import os
@@ -23,22 +23,22 @@ import streamlit as st
 import os
 
 # Put this at the very top
-if "OPENAI_API_KEY" in st.secrets:
-    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+if "OPENROUTER_API_KEY" in st.secrets:
+    os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
     st.sidebar.success("✅ OpenAI Key detected in Secrets")
 else:
     st.sidebar.error("❌ OpenAI Key NOT found in Secrets")
 
 # Verify if the key actually looks correct (first 5 characters)
-if os.environ.get("OPENAI_API_KEY"):
-    st.sidebar.write(f"Key starts with: {os.environ['OPENAI_API_KEY'][:5]}...")
+if os.environ.get("OPENROUTER_API_KEY"):
+    st.sidebar.write(f"Key starts with: {os.environ['OPENROUTER_API_KEY'][:5]}...")
 # %%
 from crewai import LLM, agent, task , crew
 # %%
 cust_llm= LLM(
     model="openai/gpt-4o-mini",
     base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=os.getenv("OPENROUTER_API_KEY"),
     temperature=0.7,
 )
 # %%
