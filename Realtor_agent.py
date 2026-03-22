@@ -7,21 +7,6 @@ from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 
-# Define your OpenRouter LLM once
-or_llm = LLM(
-    model="openrouter/openai/gpt-4o-mini", 
-    base_url="https://openrouter.ai/api/v1",
-    api_key=st.secrets.get("OPENROUTER_API_KEY")
-)
-# ------------------------------
-
-# Now define your agents using that 'or_llm'
-realtor_agent = Agent(
-    role="Realtor",
-    goal="Find houses",
-    llm=or_llm,  # <--- Make sure every agent has this!
-    verbose=True
-)
 # %%
 from dotenv import load_dotenv
 
@@ -51,7 +36,7 @@ if os.environ.get("OPENROUTER_API_KEY"):
 from crewai import LLM, agent, task , crew
 # %%
 cust_llm= LLM(
-    model="openai/gpt-4o-mini",
+    model="openrouter/gpt-4o-mini",
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY"),
     temperature=0.7,
