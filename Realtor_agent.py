@@ -2,6 +2,29 @@
 import os
 import streamlit as st
 
+import os
+import streamlit as st
+
+# STEP 1: FORCE THE ENVIRONMENT BEFORE ANY CREWAI IMPORTS
+if "OPENROUTER_API_KEY" in st.secrets:
+    os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
+    # We set these to "tricking" CrewAI into thinking it's OpenAI
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
+    os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+else:
+    st.error("Missing OPENROUTER_API_KEY in Secrets!")
+    st.stop()
+
+# STEP 2: NOW IMPORT CREWAI
+from crewai import Agent, Task, Crew, Process, LLM
+
+# STEP 3: DEFINE THE LLM USING THE NEW SYNTAX
+# Note: Use 'openai/' prefix because we forced the API_BASE above
+cust_llm = LLM(
+    model="openai/gpt-4o-mini", 
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ.get("OPENROUTER_API_KEY")
+)
 # We set these BEFORE any other imports
 if "OPENROUTER_API_KEY" in st.secrets:
     os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
